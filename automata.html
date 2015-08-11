@@ -109,7 +109,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
 			}
 			self.P = _next;
 			
-			console.log(self.P)
+			//console.log(self.P)
 			
 			return self.P;
 		}
@@ -160,6 +160,10 @@ document.addEventListener("DOMContentLoaded", function(event) {
 			ctx.clearRect( i + i*self.s, j + j*self.s, self.s, self.s );
 		}
 		
+		var xor(p, q) {
+			return (p && !q) || (!p && q); 
+		}
+		
 		self.step = function() {
 			if (self.doInit) {
 				self.getRules();
@@ -173,7 +177,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
 			self.auto2.next();
 			for (var i = 0; i < POP_SIZE_ROW; i++) {
 				for (var j = 0; j < POP_SIZE_COL; j++) {
-					if (self.cellOn(i, j)) {
+					if (xor(self.auto1.P[i], self.auto2.P[j])) {
 						self.paintCell(i, j);
 					} else {
 						self.clearCell(i, j)
