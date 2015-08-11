@@ -198,19 +198,17 @@ document.addEventListener("DOMContentLoaded", function(event) {
 			clearInterval(self._running);
 		}
 		
-		self.reset = function  {
+		self.reset = function()  {
 			ctx.clearRect(0, 0, dimensions.w, dimensions.h);
 			self.doInit = true;
-		//randomP();
 		}
 		
 	}
 	
 	var interaction = new app();
-	//var step = run.step;
 	
 	
-	// button handlers.
+	// buttons
 	document.getElementById('run').addEventListener('click', interaction.run);
 	document.getElementById('step').addEventListener('click', interaction.step);
 	document.getElementById('stop').addEventListener('click', interaction.stop);
