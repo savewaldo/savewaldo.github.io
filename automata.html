@@ -160,7 +160,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
 			ctx.clearRect( i + i*self.s, j + j*self.s, self.s, self.s );
 		}
 		
-		var xor(p, q) {
+		var xor = function(p, q) {
 			return (p && !q) || (!p && q); 
 		}
 		
