@@ -149,7 +149,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
 		};
 
 		self.cellOn = function(i, j) {
-			return self.auto1.P[i] && self.auto2.P[j];
+			return self.auto1.P[i] || self.auto2.P[j];
 		}
 		
 		self.paintCell = function(i, j) {
@@ -171,7 +171,6 @@ document.addEventListener("DOMContentLoaded", function(event) {
 			}
 			self.auto1.next();
 			self.auto2.next();
-			//console.log(self.auto1.P, self.auto2.P);
 			for (var i = 0; i < POP_SIZE_ROW; i++) {
 				for (var j = 0; j < POP_SIZE_COL; j++) {
 					if (self.cellOn(i, j)) {
