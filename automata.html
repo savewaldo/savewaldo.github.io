@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title> ¡Automata! </title>
+	</head>
+	<body>
+		<div id="test"></div>
+		<canvas id="canvas" width="400" height="400"></canvas>
+        		<input id="rule1">Rule 1</input>
+				<input id="rule2">Rule 2</input>
+				<button id="step">Step</button>
+				<button id="run">Run</button>
+				<button id="reset">Reset</button>
+	<script>
+document.addEventListener("DOMContentLoaded", function(event) {
+
+	var canvas     = document.getElementById('canvas');
+	var ctx        = canvas.getContext('2d');
+
+
+  function resizeCanvas() {
+		canvas.width = window.innerWidth;
+		canvas.height = window.innerHeight - 50;
+
+		devicePixelRatio = window.devicePixelRatio || 1,
+    backingStoreRatio = ctx.webkitBackingStorePixelRatio ||
+                        ctx.mozBackingStorePixelRatio ||
+                        ctx.msBackingStorePixelRatio ||
+                        ctx.oBackingStorePixelRatio ||
+                        ctx.backingStorePixelRatio || 1,
+
+    ratio = devicePixelRatio / backingStoreRatio;
+
+		// ensure we have a value set for auto.
+		// If auto is set to false then we
+		// will simply not upscale the canvas
+		// and the default behaviour will be maintained
+		if (typeof auto === 'undefined') {
+    		auto = true;
+		}
+
+		// upscale the canvas if the two ratios don't match
+    if (auto && devicePixelRatio !== backingStoreRatio) {
+
+        var oldWidth = canvas.width;
+        var oldHeight = canvas.height;
+
+        canvas.width = oldWidth * ratio;
+        canvas.height = oldHeight * ratio;
+
+        canvas.style.width = oldWidth + 'px';
+        canvas.style.height = oldHeight + 'px';
+
+        // now scale the ctx to counter
+        // the fact that we've manually scaled
+        // our canvas element
+        ctx.scale(ratio, ratio);
+		}
+
+		return {w: canvas.width, h: canvas.height};
+	}
+
+	window.addEventListener('resize', resizeCanvas, false);
+
+
+	var dimensions     = resizeCanvas();
+	var s 	           = 2;
+	var POP_SIZE_ROW   = Math.floor(dimensions.w / s);
+	var POP_SIZE_COL   = Math.floor(dimensions.h / s);
+	
+	var MAX_STEPS  = 100;
+	
+	function Population(n, rule) {
+		
+		var self = this;
+		
+		var INIT_RAND_CUTOFF = .2;
+		
+		self.P     = new Array(n);
+		self.rule  = rule;
+		
+		// Initialize population with random values (for now);
+		for (var j = 0; j < n; j++) {
+			self.P[j] = (Math.random() < INIT_RAND_CUTOFF) ? 1 : 0;
+		}
+		console.log(self.P)
+		
+		self.applyRule = function(i) {
+			
+			var key;
+			var P = self.P;
+			
+			if (i <= 0) {
+				key = [P[P.length - 1], P[0], P[1]].join('');
+			} else if (i >= P.length - 1) {
+				key = [P[i-1], P[i], P[0]].join('');
+			} else {
+				key = [P[i-1], P[i], P[i+1]].join('');
+			}
+			
+			return rule[key];
+		}
+		
+		self.next = function() {
+			var _next = new Array(n);
+			for (var i = 0; i < n; i++) {
+				_next[i] = self.applyRule(i);
+			}
+			self.P = _next;
+			
+			console.log(self.P)
+			
+			return self.P;
+		}
+		
+		//return {curPop: self.P, next: self.next, };
+	}
+	
+	function app() {
+		
+		var self = this;
+		
+		self.firstTime = true;
+		self.updateInterval = 100;
+		
+		
+		self.getRules = function() {
+
+			var rs1 = document.getElementById('rule1').value;
+			var rs2 = document.getElementById('rule2').value;
+			
+			var R1 = {};
+			var R2 = {};
+	
+			var keys = ["111", "110", "101", "100", "011", "010", "001", "000"];
+	
+			rs1.split('').forEach(function(x, i, arr) {
+				R1[keys[i]] = parseInt(x, 10);
+			});
+	
+			rs2.split('').forEach(function(x, i, arr) {
+				R2[keys[i]] = parseInt(x, 10);
+			});
+			
+			
+			self.rules = [R1, R2];
+
+		};
+
+		
+		//console.log(self.rules);
+		
+		self.cellOn = function(i, j) {
+			return self.auto1.P[i] && self.auto2.P[j];
+		}
+		
+		self.paintCell = function(i, j) {
+			ctx.fillRect( i + i*self.s, j + j*self.s, self.s, self.s );
+		}
+		
+		self.clearCell = function(i, j) {
+			ctx.clearRect( i + i*self.s, j + j*self.s, self.s, self.s );
+		}
+		
+		self.step = function() {
+			if (self.firstTime) {
+				self.getRules();
+				ctx.fillStyle = "black";
+				self.auto1 = new Population(POP_SIZE_ROW, self.rules[0]);
+				self.auto2 = new Population(POP_SIZE_COL, self.rules[1]);
+				self.s = s;
+				self.firstTime = false;
+			}
+			self.auto1.next();
+			self.auto2.next();
+			console.log(self.auto1.P, self.auto2.P);
+			for (var i = 0; i < POP_SIZE_ROW; i++) {
+				for (var j = 0; j < POP_SIZE_COL; j++) {
+					if (self.cellOn(i, j)) {
+						self.paintCell(i, j);
+					} else {
+						self.clearCell(i, j)
+					}
+				}
+			}
+		}
+		
+		var _run;
+		self.run = function() {
+			self._running = setInterval(function() {
+				self.step();
+			}, self.updateInterval);
+		}
+		
+
+		self.stop = function() { 
+			clearInterval(self._running);
+		}
+		
+		self.clear = function reset() {
+			ctx.clearRect(0, 0, dimensions.w, dimensions.h);
+		//randomP();
+		}
+		
+	}
+	
+	var interaction = new app();
+	//var step = run.step;
+	
+	
+	// button handlers.
+	document.getElementById('run').addEventListener('click', interaction.run);
+	document.getElementById('step').addEventListener('click', interaction.step);
+	document.getElementById('reset').addEventListener('click', interaction.reset);
+
+
+});
+	</script>
+	</body>
+</html>
