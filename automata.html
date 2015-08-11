@@ -10,6 +10,7 @@
 				<input id="rule2">Rule 2</input>
 				<button id="step">Step</button>
 				<button id="run">Run</button>
+				<button id="stop">Stop</button>
 				<button id="reset">Reset</button>
 	<script>
 document.addEventListener("DOMContentLoaded", function(event) {
@@ -120,7 +121,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
 		
 		var self = this;
 		
-		self.firstTime = true;
+		self.doInit = true;
 		self.updateInterval = 100;
 		
 		
@@ -163,7 +164,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
 		}
 		
 		self.step = function() {
-			if (self.firstTime) {
+			if (self.doInit) {
 				self.getRules();
 				ctx.fillStyle = "black";
 				self.auto1 = new Population(POP_SIZE_ROW, self.rules[0]);
@@ -197,8 +198,9 @@ document.addEventListener("DOMContentLoaded", function(event) {
 			clearInterval(self._running);
 		}
 		
-		self.clear = function reset() {
+		self.reset = function  {
 			ctx.clearRect(0, 0, dimensions.w, dimensions.h);
+			self.doInit = true;
 		//randomP();
 		}
 		
@@ -211,6 +213,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
 	// button handlers.
 	document.getElementById('run').addEventListener('click', interaction.run);
 	document.getElementById('step').addEventListener('click', interaction.step);
+	document.getElementById('stop').addEventListener('click', interaction.stop);
 	document.getElementById('reset').addEventListener('click', interaction.reset);
 
 
