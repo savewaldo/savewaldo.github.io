@@ -122,7 +122,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
 		var self = this;
 		
 		self.doInit = true;
-		self.updateInterval = 100;
+		self.updateInterval = 10;
 		
 		
 		self.getRules = function() {
@@ -148,9 +148,6 @@ document.addEventListener("DOMContentLoaded", function(event) {
 
 		};
 
-		
-		//console.log(self.rules);
-		
 		self.cellOn = function(i, j) {
 			return self.auto1.P[i] && self.auto2.P[j];
 		}
@@ -174,7 +171,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
 			}
 			self.auto1.next();
 			self.auto2.next();
-			console.log(self.auto1.P, self.auto2.P);
+			//console.log(self.auto1.P, self.auto2.P);
 			for (var i = 0; i < POP_SIZE_ROW; i++) {
 				for (var j = 0; j < POP_SIZE_COL; j++) {
 					if (self.cellOn(i, j)) {
@@ -185,8 +182,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
 				}
 			}
 		}
-		
-		var _run;
+	
 		self.run = function() {
 			self._running = setInterval(function() {
 				self.step();
