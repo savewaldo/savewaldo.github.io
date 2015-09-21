@@ -148,7 +148,6 @@
       }
 
       self.move = function(dx, dy) {
-        //ctx.clearRect(self.x - self.radius, self.y - self.radius, 2*self.radius, 2*self.radius);
         self.clear();
         self.x = self.x + dx;
         self.y = self.y + dy;
@@ -273,22 +272,27 @@
     //var ball3 = new Ball(600, 300, 10, 10, Math.random(), 1);
 
     var balls = [];
+    var numBalls = 1;
 
-    var randX, randY;
-    var randDx, randDy;
-    var radius = 10;
-    var mass = 1;
-    var plusMinus;
-    var speedUp = 3;
-    var numBalls = 5;
-    for (var i=0; i < numBalls ; i++) {
-      plusMinus = Math.random() > 0.5 ? 1 : -1;
-      randX = canvas.width*Math.random();
-      randY = canvas.height*Math.random();
-      randDx = plusMinus*Math.random();
-      randDy = Math.random()*speedUp;
-      balls.push(new Ball(randX, randY, radius, mass, randDx, randDy));
+    function newGame() {
+
+      var randX, randY;
+      var randDx, randDy;
+      var radius = 10;
+      var mass = 1;
+      var plusMinus;
+      var speedUp = 3;
+      for (var i=0; i < numBalls ; i++) {
+        plusMinus = Math.random() > 0.5 ? 1 : -1;
+        randX = (canvas.width-50)*Math.random();
+        randY = 200*Math.random();
+        randDx = plusMinus*Math.random();
+        randDy = Math.random()*speedUp;
+        balls.push(new Ball(randX, randY, radius, mass, randDx, randDy));
+      }
     }
+
+    newGame();
 
     function checkKey(e) {
 
@@ -344,8 +348,13 @@
         }
       }
       if (deadBalls == numBalls) {
-        ctx.font="75px Georgia";
-        ctx.fillText("You won!", 450, 250);
+        numBalls++
+        deadBalls = 0;
+        //ctx.font="75px Georgia";
+        //ctx.fillText("You won!", 450, 250);
+        balls = [];
+        bullets = [];
+        newGame();
       }
       frame++;
     }
