@@ -62,8 +62,8 @@
       var self = this;
       self.x = x;
       self.y = y;
-      self.width = 2;
-      self.height = 5;
+      self.width = 3;
+      self.height = 7;
       self.dx = 0;
       self.dy = -20;
 
@@ -83,8 +83,9 @@
       }
 
       self.strike = function(ball) {
-        var dist = Math.sqrt(Math.pow(self.x - ball.x, 2) + Math.pow(self.y - ball.y, 2));
-        return dist < ball.radius;
+        var center = {x: self.x + self.width/2, y: self.y + self.height/2};
+        var dist = Math.sqrt(Math.pow(center.x - ball.x, 2) + Math.pow(center.y - ball.y, 2));
+        return dist < ball.radius + 1;
       }
 
       self.draw();
@@ -202,13 +203,13 @@
       }
 
       self.touchesWall = function() {
-        if (self.y - 2*self.radius < 0) {
+        if (self.y < self.radius) {
           return {dx: 1, dy: -1};
-        } else if (self.x - 2*self.radius < 0) {
+        } else if (self.x < self.radius) {
           return {dx: -1, dy: 1};
-        } else if (self.x + 2*self.radius > canvas.width) {
+        } else if (self.x  > canvas.width - self.radius) {
           return {dx: -1, dy: 1};
-        } else if (self.y + 2*self.radius > canvas.height ){
+        } else if (self.y  > canvas.height - self.radius){
           return {dx: 1, dy: -1};
         } else {
           return {dx: 1, dy: 1};
@@ -285,9 +286,9 @@
       for (var i=0; i < numBalls ; i++) {
         plusMinus = Math.random() > 0.5 ? 1 : -1;
         randX = (canvas.width-50)*Math.random();
-        randY = 200*Math.random();
+        randY = 200*Math.random()+10;
         randDx = plusMinus*Math.random();
-        randDy = Math.random()*speedUp;
+        randDy = Math.random()*speedUp + 2;
         balls.push(new Ball(randX, randY, radius, mass, randDx, randDy));
       }
     }
@@ -330,6 +331,8 @@
           balls = [];
           bullets = [];
         }
+        balls[i].dx = Math.min(balls[i].dx, 20);
+        balls[i].dy = Math.min(balls[i].dy, 20);
         for (var j=0; j < balls.length; j++) {
           if (i != j) {
             if (doCollide(balls[i], balls[j])) {
@@ -356,6 +359,7 @@
         bullets = [];
         newGame();
       }
+
       frame++;
     }
 
