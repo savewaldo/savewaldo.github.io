@@ -1,0 +1,349 @@
+<!doctype html>
+<html>
+<head>
+<link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+  <canvas id="canvas" height="700" width="1200"></canvas>
+  <script>
+  document.addEventListener("DOMContentLoaded", function() {
+
+    var canvas     = document.getElementById('canvas');
+    var ctx        = canvas.getContext('2d');
+  //fuck this
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      devicePixelRatio = window.devicePixelRatio || 1,
+      backingStoreRatio = ctx.webkitBackingStorePixelRatio ||
+                          ctx.mozBackingStorePixelRatio ||
+                          ctx.msBackingStorePixelRatio ||
+                          ctx.oBackingStorePixelRatio ||
+                          ctx.backingStorePixelRatio || 1,
+
+      ratio = devicePixelRatio / backingStoreRatio;
+
+      // ensure we have a value set for auto.
+      // If auto is set to false then we
+      // will simply not upscale the canvas
+      // and the default behaviour will be maintained
+      if (typeof auto === 'undefined') {
+          auto = true;
+      }
+
+      // upscale the canvas if the two ratios don't match
+      if (auto && devicePixelRatio !== backingStoreRatio) {
+
+          var oldWidth = canvas.width;
+          var oldHeight = canvas.height;
+
+          canvas.width = oldWidth * ratio;
+          canvas.height = oldHeight * ratio;
+
+          canvas.style.width = oldWidth + 'px';
+          canvas.style.height = oldHeight + 'px';
+
+          // now scale the ctx to counter
+          // the fact that we've manually scaled
+          // our canvas element
+          ctx.scale(ratio, ratio);
+      }
+
+      return {w: canvas.width, h: canvas.height};
+    }
+
+    var bullets = [];
+
+
+    function Bullet(x, y) {
+
+      var self = this;
+      self.x = x;
+      self.y = y;
+      self.width = 2;
+      self.height = 5;
+      self.dx = 0;
+      self.dy = -20;
+
+      self.draw = function() {
+        ctx.fillStyle = "white";
+        ctx.fillRect(self.x, self.y, self.width, self.height);
+      }
+
+      self.move = function() {
+        ctx.clearRect(self.x, self.y, self.width, self.height);
+        if (self.y == 0) {
+          bullets.pop();
+          self.dy = 0;
+        }
+        self.y = self.y + self.dy;
+        self.draw();
+      }
+
+      self.strike = function(ball) {
+        var dist = Math.sqrt(Math.pow(self.x - ball.x, 2) + Math.pow(self.y - ball.y, 2));
+        return dist < ball.radius;
+      }
+
+      self.draw();
+    }
+
+    function Paddle() {
+      var self = this;
+
+      self.x = 525;
+      self.y = 640;
+      self.mass = Math.pow(100, 10); // huge!
+
+      self.width = 10;
+      self.height = 50;
+
+      self.draw = function() {
+        if (self.height > 2) {
+          ctx.fillStyle = "white";
+          ctx.fillRect(self.x, self.y, self.width, self.height);
+        }
+      }
+
+      self.move = function(dx, dy) {
+        ctx.clearRect(self.x, self.y, self.width+0.5, self.height+0.5);
+        self.x = self.x + dx;
+        self.y = self.y + dy;
+        self.draw();
+      }
+
+      self.draw();
+    }
+
+
+    function Ball(x, y, r, m, dxi, dyi) {
+      var self = this;
+
+      self.x = x;
+      self.y = y;
+      self.mass = m;
+
+      self.radius = r;
+
+      self.dx = dxi;
+      self.dy = dyi;
+      self.live = true;
+
+      self.draw = function() {
+        ctx.fillStyle = "white";
+        ctx.beginPath();
+        ctx.arc(self.x, self.y, self.radius, 0, 2*Math.PI, false);
+        ctx.fill();
+      }
+
+      self.clear = function() {
+        ctx.fillStyle = "black";
+        ctx.beginPath();
+        ctx.arc(self.x, self.y, self.radius+1, 0, 2*Math.PI, false);
+        ctx.fill();
+      }
+
+      self.move = function(dx, dy) {
+        //ctx.clearRect(self.x - self.radius, self.y - self.radius, 2*self.radius, 2*self.radius);
+        self.clear();
+        self.x = self.x + dx;
+        self.y = self.y + dy;
+        if (self.radius > 5) {
+          self.draw();
+        }
+      }
+
+      self.transform = function(_paddle) {
+
+        //self.lost();
+        var paddleHit = false;
+
+        if (self.touchesPaddle(_paddle) && self.live) {
+          self.dy = -1*self.dy;
+          self.dx = -1*self.dx;
+          self.live = false;
+          paddleHit = true;
+        }
+
+        var wall = self.touchesWall();
+        self.dx = wall.dx * self.dx;
+        self.dy = wall.dy * self.dy;
+
+        self.move(self.dx, self.dy);
+        return paddleHit;
+      }
+
+      self.touchesPaddle = function(P) {
+        var TOLERANCE = 5;
+
+        var ballLeft = self.x - self.radius;
+        var ballRight = self.x + self.radius;
+        var ballTop = self.y - self.radius;
+        var ballBottom = self.y + self.radius;
+
+        var paddleRight = P.x + P.width;
+        var paddleLeft  = P.x;
+
+        var paddleTop = P.y;
+        var paddleBottom = P.y + P.height;
+
+        var toRight = ballLeft > paddleRight;
+        var toLeft  = ballRight < paddleLeft;
+        var above   = ballBottom < paddleTop;
+        var below   = ballTop > paddleBottom;
+
+        return !(toRight || toLeft || above || below)
+      }
+
+      self.touchesWall = function() {
+        if (self.y - 2*self.radius < 0) {
+          return {dx: 1, dy: -1};
+        } else if (self.x - 2*self.radius < 0) {
+          return {dx: -1, dy: 1};
+        } else if (self.x + 2*self.radius > canvas.width) {
+          return {dx: -1, dy: 1};
+        } else if (self.y + 2*self.radius > canvas.height ){
+          return {dx: 1, dy: -1};
+        } else {
+          return {dx: 1, dy: 1};
+        }
+      }
+
+      self.lost = function() {
+        if (self.y > canvas.height) {
+          self.dx = 0;
+          self.dy = 0;
+        }
+      }
+
+
+      self.draw();
+    }
+
+    function ballCollision(ball1, ball2) {
+      var n = {x: ball2.x - ball1.x, y: ball2.y - ball1.y};
+      var nMag = Math.sqrt(n.x*n.x, n.y*n.y);
+      var un = {x: n.x / nMag, y: n.y / nMag};
+      var ut = {x: -un.y, y: un.x};
+
+      var v1 = {x: ball1.dx, y: ball1.dy};
+      var v2 = {x: ball2.dx, y: ball2.dy};
+
+      var v1n = un.x * v1.x + un.y * v1.y;
+      var v1t = ut.x * v1.x + ut.y * v1.y;
+
+      var v2n = un.x * v2.x + un.y * v2.y;
+      var v2t = ut.x * v2.x + ut.y * v2.y;
+
+      var m1 = ball1.mass;
+      var m2 = ball2.mass;
+
+      var v1nf = (v1n * (m1 - m2) + 2*m2*v2n) / (m1 + m2);
+      var v2nf = (v2n * (m2 - m1) + 2*m1*v1n) / (m1 + m2);
+
+      var v1f = {x: v1nf*un.x + v1t*ut.x, y: v1nf*un.y + v1t*ut.y};
+      var v2f = {x: v2nf*un.x + v2t*ut.x, y: v2nf*un.y + v2t*ut.y};
+
+      ball1.dx = Math.min(v1f.x, 20);
+      ball1.dy = Math.min(v1f.y, 20);
+
+      ball2.dx = Math.min(v2f.x, 20);
+      ball2.dy = Math.min(v2f.y, 20);
+
+      //console.log(ball1.dx, ball1.dy, ball2.dx, ball2.dy);
+    }
+
+    function doCollide(ball1, ball2) {
+      var dist = Math.sqrt(Math.pow(ball1.x - ball2.x, 2) + Math.pow(ball1.y - ball2.y, 2));
+      var maxRadius = Math.max(ball1.radius, ball2.radius);
+      return (dist < maxRadius);
+    }
+
+    var paddle = new Paddle();
+
+    //var ball1 = new Ball(700, 20, 10, 10, -Math.random(), 1);
+    //var ball2 = new Ball(525, 20, 10, 10, Math.random(), 1);
+    //var ball3 = new Ball(600, 300, 10, 10, Math.random(), 1);
+
+    var balls = [];
+
+    var randX, randY;
+    var randDx, randDy;
+    var radius = 10;
+    var mass = 1;
+    var plusMinus;
+    var speedUp = 3;
+    for (var i=0; i < 5 ; i++) {
+      plusMinus = Math.random() > 0.5 ? 1 : -1;
+      randX = canvas.width*Math.random();
+      randY = canvas.height*Math.random();
+      randDx = plusMinus*Math.random();
+      randDy = Math.random()*speedUp;
+      balls.push(new Ball(randX, randY, radius, mass, randDx, randDy));
+    }
+
+    function checkKey(e) {
+
+      var DX = 20;
+      var DY = 20;
+
+      e = e || window.event;
+
+      if (e.keyCode == '37') {
+        paddle.move(-DX, 0);
+      }
+      else if (e.keyCode == '39') {
+        paddle.move(DX, 0);
+      }
+      else if (e.keyCode == '38') {
+        paddle.move(0, -DY);
+      }
+      else if (e.keyCode == '40') {
+        paddle.move(0, DY);
+      } else if (e.keyCode == '32') {
+        bullets.push(new Bullet(paddle.x + paddle.width/2, paddle.y+.01));
+      }
+    }
+
+    document.onkeydown = checkKey;
+
+    var frame = 0;
+    function animate() {
+      window.requestAnimationFrame(animate);
+      for (var i=0; i< balls.length; i++) {
+        var hit = balls[i].transform(paddle);
+        if (hit) {
+          ctx.font="75px Georgia";
+          ctx.fillText("You died!", 450, 250);
+          balls = [];
+          bullets = [];
+        }
+        for (var j=0; j < balls.length; j++) {
+          if (i != j) {
+            if (doCollide(balls[i], balls[j])) {
+              ballCollision(balls[i], balls[j]);
+            }
+          }
+        }
+      }
+
+      for (var i=0; i < bullets.length; i++) {
+        bullets[i].move();
+        for (var j=0; j < balls.length; j++) {
+          if (bullets[i].strike(balls[j])) {
+            balls[j].radius--;
+          }
+        }
+      }
+      frame++;
+    }
+
+    animate();
+
+
+  });
+  </script>
+</body>
+</html>
