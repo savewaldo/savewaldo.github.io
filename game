@@ -118,7 +118,7 @@
     }
 
 
-    var deadBalls = 0; // ghetto shit
+    var deadBalls = 0;
 
     function Ball(x, y, r, m, dxi, dyi) {
       var self = this;
@@ -154,9 +154,8 @@
         self.y = self.y + dy;
         if (self.radius > 5) {
           self.draw();
-        } else if (self.live){
+        } else {
           deadBalls++;
-          self.live = false;
         }
       }
 
@@ -280,7 +279,7 @@
     var mass = 1;
     var plusMinus;
     var speedUp = 3;
-    var numBalls = 5;
+    var numBalls = 1;
     for (var i=0; i < numBalls ; i++) {
       plusMinus = Math.random() > 0.5 ? 1 : -1;
       randX = canvas.width*Math.random();
@@ -316,6 +315,8 @@
     document.onkeydown = checkKey;
 
     var frame = 0;
+    var won = false;
+
     function animate() {
       window.requestAnimationFrame(animate);
       for (var i=0; i< balls.length; i++) {
@@ -343,9 +344,12 @@
           }
         }
       }
-      if (deadBalls == numBalls) {
+
+      if (deadBalls === numBalls) {
         ctx.font="75px Georgia";
         ctx.fillText("You won!", 450, 250);
+        balls = [];
+        bullets = [];
       }
       frame++;
     }
@@ -354,6 +358,7 @@
 
 
   });
+
   </script>
 </body>
 </html>
