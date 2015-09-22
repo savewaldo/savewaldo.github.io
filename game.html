@@ -1,5 +1,5 @@
 <!doctype html>
-<html manifest="manifest.appcache">
+<html>
 <head>
 <link rel="stylesheet" type="text/css" href="style.css">
 </head>
@@ -57,15 +57,29 @@
     var bullets = [];
 
 
-    function Bullet(x, y) {
+    function Bullet(x, y, direction) {
 
       var self = this;
       self.x = x;
       self.y = y;
       self.width = 3;
-      self.height = 7;
-      self.dx = 0;
-      self.dy = -20;
+      self.height = 3;
+
+      var speed = 10;
+
+      if (direction == 'up') {
+        self.dx = 0;
+        self.dy = -speed;
+      } else if (direction == 'down') {
+        self.dx = 0;
+        self.dy = speed;
+      } else if (direction == 'left') {
+        self.dx = -speed;
+        self.dy = 0;
+      } else if (direction == 'right') {
+        self.dx = speed;
+        self.dy = 0;
+      }
 
       self.draw = function() {
         ctx.fillStyle = "white";
@@ -73,12 +87,14 @@
       }
 
       self.move = function() {
-        ctx.clearRect(self.x, self.y, self.width, self.height);
-        if (self.y == 0) {
+        ctx.clearRect(self.x, self.y, self.width + 5, self.height + 5);
+        if (self.y == 0 || self.y == canvas.height || self.x == 0 || self.x == canvas.width) {
           bullets.pop();
           self.dy = 0;
+          self.dx = 0;
         }
         self.y = self.y + self.dy;
+        self.x = self.x + self.dx;
         self.draw();
       }
 
@@ -98,8 +114,8 @@
       self.y = 640;
       self.mass = Math.pow(100, 10); // huge!
 
-      self.width = 10;
-      self.height = 50;
+      self.width = 20;
+      self.height = 15;
 
       self.draw = function() {
         if (self.height > 2) {
@@ -332,8 +348,18 @@
       }
       else if (e.keyCode == '40') {
         paddle.move(0, DY);
-      } else if (e.keyCode == '32') {
-        bullets.push(new Bullet(paddle.x + paddle.width/2, paddle.y+.01));
+      }
+      else if (e.keyCode == '87') { //w
+        bullets.push(new Bullet(paddle.x + paddle.width/2, paddle.y+paddle.height/2, 'up'));
+      }
+      else if (e.keyCode == '65') { //a
+        bullets.push(new Bullet(paddle.x + paddle.width/2, paddle.y+paddle.height/2, 'left'));
+      }
+      else if (e.keyCode == '83') {// s
+        bullets.push(new Bullet(paddle.x + paddle.width/2, paddle.y+paddle.height/2, 'down'));
+      }
+      else if (e.keyCode == '68') {// d
+        bullets.push(new Bullet(paddle.x + paddle.width/2, paddle.y+paddle.height/2, 'right'));
       }
     }
 
