@@ -60,7 +60,7 @@
           }
         }
         self.a = {x: self.F.x / self.mass, y: self.F.y / self.mass};
-        self.v = {x: self.v.x + self.a.x*t, y: self.v.y + self.a.y*t};
+        self.v = {x: (self.v.x + self.a.x*t), y: (self.v.y + self.a.y*t)};
       }
 
       self.collides = function(body) {
@@ -71,10 +71,10 @@
 
       self.update = function(step, bodies) {
         self.clear();
-        self.updateTrajectory(step/1000, bodies);
+        self.updateTrajectory(step/100, bodies);
         var px = self.position.x + self.v.x;
         var py = self.position.y + self.v.y;
-        if (px < 0 ) {
+        /*if (px < 0 ) {
           px = canvas.width;
         } else if (px > canvas.width) {
           px = 0;
@@ -83,7 +83,7 @@
           py = canvas.height;
         } else if (py > canvas.height) {
           py = 0;
-        }
+        }*/
         self.position.x = px;
         self.position.y = py;
         self.draw();
@@ -97,14 +97,14 @@
       var randX = function() { return Math.random()*canvas.width; };
       var randY = function() { return Math.random()*canvas.height; };
       var randRadius = function() { return Math.random()*5};
-      var randDensity = function() { return Math.random()*2*5000};
+      var randDensity = function() { return Math.random()*2*50000};
       var aMass = function(r, d) {return d*Math.PI*Math.pow(r, 2)};
       var randDX = function() { return Math.random()/10; }
       var randDY = function() { return Math.random()/10; }
       var radiusFromMass = function(m) {return m / 100000}
 
       var bodies = [];
-      var numBodies = 50;
+      var numBodies = 100;
       for (var i=0; i < numBodies; i++) {
         var x = randX();
         var y = randY();
@@ -124,8 +124,8 @@
         var y = (a.position.y + b.position.y) / 2;
         var m = a.mass + b.mass;
         var r = Math.max(a.radius, b.radius);
-        var dx = a.v.x + b.v.x;
-        var dy = a.v.y + b.v.y;
+        var dx = (a.v.x + b.v.x);
+        var dy = (a.v.y + b.v.y);
         a.clear();
         b.clear();
         var newMass = new Mass(x, y, r, m, dx, dy);
@@ -139,16 +139,16 @@
         var _bodies = bodies.slice();
         for (var j=0; j< bodies.length; j++) {
           bodies[j].update(step, bodies);
-          for (var i=0; i<bodies.length; i++) {
+          /*for (var i=0; i<bodies.length; i++) {
             if ( (i != j) && bodies[i].collides(bodies[j]) ) {
               var nb = combineBodies(bodies[i], bodies[j]);
               _bodies.splice(i, 1);
               _bodies.splice(j, 1);
               _bodies.push(nb);
             }
-          }
+          }*/
         }
-        bodies = _bodies;
+        //bodies = _bodies;
         step++;
       }
       animate();
