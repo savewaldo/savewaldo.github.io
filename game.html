@@ -64,6 +64,7 @@
       self.y = y;
       self.width = 3;
       self.height = 3;
+      self.active = true;
 
       var speed = 10;
 
@@ -101,7 +102,12 @@
       self.strike = function(ball) {
         var center = {x: self.x + self.width/2, y: self.y + self.height/2};
         var dist = Math.sqrt(Math.pow(center.x - ball.x, 2) + Math.pow(center.y - ball.y, 2));
-        return dist < ball.radius + 5;
+        if (self.active && dist < ball.radius + 5) {
+          self.active = false;
+          return true;
+        } else {
+          return false;
+        }
       }
 
       self.draw();
@@ -221,7 +227,6 @@
       }
 
       self.touchesPaddle = function(P) {
-        var TOLERANCE = 5;
 
         var ballLeft = self.x - self.radius;
         var ballRight = self.x + self.radius;
@@ -263,36 +268,14 @@
       if (! (ball1.live && ball2.live) ) {
         return false;
       }
-      /*var n = {x: ball2.x - ball1.x, y: ball2.y - ball1.y};
-      var nMag = Math.sqrt(n.x*n.x, n.y*n.y);
-      var un = {x: n.x / nMag, y: n.y / nMag};
-      var ut = {x: -un.y, y: un.x};
 
-      var v1 = {x: ball1.dx, y: ball1.dy};
-      var v2 = {x: ball2.dx, y: ball2.dy};
+      // crappy physics
+      ball1.dx = Math.min(ball1.dx - ball2.dx, 5);
+      ball1.dy = Math.min(ball1.dy - ball2.dy, 5);
 
-      var v1n = un.x * v1.x + un.y * v1.y;
-      var v1t = ut.x * v1.x + ut.y * v1.y;
+      ball2.dx = Math.min(ball2.dx - ball1.dx, 5);
+      ball2.dy = Math.min(ball1.dy - ball1.dy, 5);
 
-      var v2n = un.x * v2.x + un.y * v2.y;
-      var v2t = ut.x * v2.x + ut.y * v2.y;
-
-      var m1 = ball1.mass;
-      var m2 = ball2.mass;
-
-      var v1nf = (v1n * (m1 - m2) + 2*m2*v2n) / (m1 + m2);
-      var v2nf = (v2n * (m2 - m1) + 2*m1*v1n) / (m1 + m2);
-
-      var v1f = {x: v1nf*un.x + v1t*ut.x, y: v1nf*un.y + v1t*ut.y};
-      var v2f = {x: v2nf*un.x + v2t*ut.x, y: v2nf*un.y + v2t*ut.y};
-      */
-      ball1.dx = Math.min(ball1.dx - ball2.dx, 2);
-      ball1.dy = Math.min(ball1.dy - ball2.dy, 2);
-
-      ball2.dx = Math.min(ball2.dx - ball1.dx, 2);
-      ball2.dy = Math.min(ball1.dy - ball1.dy, 2);
-
-      //console.log(ball1.dx, ball1.dy, ball2.dx, ball2.dy);
     }
 
     function doCollide(ball1, ball2) {
@@ -302,10 +285,6 @@
     }
 
     var paddle = new Paddle();
-
-    //var ball1 = new Ball(700, 20, 10, 10, -Math.random(), 1);
-    //var ball2 = new Ball(525, 20, 10, 10, Math.random(), 1);
-    //var ball3 = new Ball(600, 300, 10, 10, Math.random(), 1);
 
     var balls = [];
     var numBalls = 1;
