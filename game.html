@@ -284,7 +284,7 @@
       return (dist < maxRadius + 2);
     }
 
-    var paddle = new Paddle();
+
 
     var balls = [];
     var numBalls = 1;
@@ -307,7 +307,17 @@
       }
     }
 
-    newGame();
+    var paddle;
+    ctx.fillStyle = "white";
+    ctx.font="20px Georgia";
+    ctx.fillText("Shoot: w a s d", 450, 250);
+    ctx.fillText("Move: Arrow Keys", 450, 300);
+    ctx.fillText("Click to start!", 450, 350);
+    canvas.addEventListener("click", function() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      paddle = new Paddle();
+      newGame();
+    });
 
     function checkKey(e) {
 
