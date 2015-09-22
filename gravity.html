@@ -1,0 +1,158 @@
+<!doctype html>
+<html>
+<head>
+<link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+  <canvas id="canvas" height="700" width="1200"></canvas>
+  <script>
+  document.addEventListener("DOMContentLoaded", function() {
+
+    var canvas     = document.getElementById('canvas');
+    var ctx        = canvas.getContext('2d');
+
+    ctx.fillStyle = "white";
+    ctx.save();
+
+    var G = 6.67408E-11;
+
+    function Mass(x, y, r, m, dx, dy) {
+      var self = this;
+
+      self.position = {x: x, y: y};
+      self.radius = r;
+      self.mass = m;
+      self.F = {x: 0, y: 0};
+      self.a = {x: 0, y: 0};
+      self.v = {x: dx, y: dy};
+
+      self.draw = function() {
+        ctx.fillStyle = "white";
+        ctx.beginPath();
+        ctx.arc(self.position.x, self.position.y, self.radius, 0, 2*Math.PI);
+        ctx.fill();
+      }
+
+      self.clear = function() {
+        ctx.fillStyle = "black";
+        ctx.beginPath();
+        ctx.arc(self.position.x, self.position.y, self.radius+0.5, 0, 2*Math.PI, false);
+        ctx.fill();
+      }
+
+      self.updateForce = function(body) {
+        var p = self.position;
+        var w = body.position;
+
+        var d = {x: p.x - w.x, y: p.y - w.y};
+        var dMag = Math.sqrt(d.x*d.x + d.y*d.y);
+
+        var r = {x: d.x / dMag, y: d.y / dMag};
+        var mu = (-G*(self.mass * body.mass) / Math.pow(dMag, 2));
+
+        self.F = {x: self.F.x + mu * r.x, y: self.F.y + mu * r.y};
+      }
+
+      self.updateTrajectory = function(t, bodies) {
+        for (var i=0; i < bodies.length; i++) {
+          if (!(Object.is(self, bodies[i]))) {
+            self.updateForce(bodies[i]);
+          }
+        }
+        self.a = {x: self.F.x / self.mass, y: self.F.y / self.mass};
+        self.v = {x: self.v.x + self.a.x*t, y: self.v.y + self.a.y*t};
+      }
+
+      self.collides = function(body) {
+        var d = {x: self.position.x - body.position.x, y: self.position.y - body.position.y};
+        var dMag = Math.sqrt(d.x * d.x + d.y * d.y);
+        return dMag < Math.max(self.radius, body.radius);
+      }
+
+      self.update = function(step, bodies) {
+        self.clear();
+        self.updateTrajectory(step/1000, bodies);
+        var px = self.position.x + self.v.x;
+        var py = self.position.y + self.v.y;
+        if (px < 0 ) {
+          px = canvas.width;
+        } else if (px > canvas.width) {
+          px = 0;
+        }
+        if (py < 0) {
+          py = canvas.height;
+        } else if (py > canvas.height) {
+          py = 0;
+        }
+        self.position.x = px;
+        self.position.y = py;
+        self.draw();
+      }
+
+      self.draw();
+
+    }
+
+      var pm = function() { return (Math.random() > 0.5 ? 1 : -1) }
+      var randX = function() { return Math.random()*canvas.width; };
+      var randY = function() { return Math.random()*canvas.height; };
+      var randRadius = function() { return Math.random()*5};
+      var randDensity = function() { return Math.random()*2*5000};
+      var aMass = function(r, d) {return d*Math.PI*Math.pow(r, 2)};
+      var randDX = function() { return Math.random()/10; }
+      var randDY = function() { return Math.random()/10; }
+      var radiusFromMass = function(m) {return m / 100000}
+
+      var bodies = [];
+      var numBodies = 50;
+      for (var i=0; i < numBodies; i++) {
+        var x = randX();
+        var y = randY();
+        var r = randRadius();
+        var d = randDensity();
+        var m = aMass(r, d);
+        var dx = Math.random()/10;
+        var dy = Math.random()/10;
+
+        bodies.push(new Mass(x, y, r, m, dx, dy));
+      }
+
+      //bodies.push(new Mass(canvas.width / 2, canvas.height /2, 25, Math.pow(10, 5), 0, 0));
+
+      function combineBodies(a, b) {
+        var x = (a.position.x + b.position.x) / 2;
+        var y = (a.position.y + b.position.y) / 2;
+        var m = a.mass + b.mass;
+        var r = Math.max(a.radius, b.radius);
+        var dx = a.v.x + b.v.x;
+        var dy = a.v.y + b.v.y;
+        a.clear();
+        b.clear();
+        var newMass = new Mass(x, y, r, m, dx, dy);
+        //console.log(newMass);
+        return newMass;
+      }
+
+      var step = 0;
+      function animate() {
+        window.requestAnimationFrame(animate);
+        var _bodies = bodies.slice();
+        for (var j=0; j< bodies.length; j++) {
+          bodies[j].update(step, bodies);
+          for (var i=0; i<bodies.length; i++) {
+            if ( (i != j) && bodies[i].collides(bodies[j]) ) {
+              var nb = combineBodies(bodies[i], bodies[j]);
+              _bodies.splice(i, 1);
+              _bodies.splice(j, 1);
+              _bodies.push(nb);
+            }
+          }
+        }
+        bodies = _bodies;
+        step++;
+      }
+      animate();
+  });
+  </script>
+</body>
+</html>
