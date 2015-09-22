@@ -85,7 +85,7 @@
       self.strike = function(ball) {
         var center = {x: self.x + self.width/2, y: self.y + self.height/2};
         var dist = Math.sqrt(Math.pow(center.x - ball.x, 2) + Math.pow(center.y - ball.y, 2));
-        return dist < ball.radius + 1;
+        return dist < ball.radius + 5;
       }
 
       self.draw();
@@ -109,6 +109,9 @@
       }
 
       self.move = function(dx, dy) {
+        if (self.y + dy + self.height > canvas.height || self.y + dy < 0 || self.x + dx + self.width > canvas.width || self.x + dx < 0) {
+          return false;
+        }
         ctx.clearRect(self.x, self.y, self.width+0.5, self.height+0.5);
         self.x = self.x + dx;
         self.y = self.y + dy;
@@ -148,10 +151,31 @@
         ctx.fill();
       }
 
-      self.move = function(dx, dy) {
+      self.move = function(_dx, _dy) {
+        var dx = Math.min(_dx, 7);
+        var dy = Math.min(_dy, 7);
+
         self.clear();
         self.x = self.x + dx;
         self.y = self.y + dy;
+
+        if (self.x < 0) {
+          self.x = 20;
+          self.dx = 0.5;
+        }
+        if (self.x > canvas.width) {
+          self.x = canvas.width - 20;
+          self.x = -0.5;
+        }
+        if (self.y < 0) {
+          self.y = 20;
+          self.dy = 0.5
+        }
+        if (self.y > canvas.height) {
+          self.y = canvas.height - 20;
+          self.y = -0.5;
+        }
+
         if (self.radius > 5) {
           self.draw();
         } else if (self.live){
@@ -216,19 +240,14 @@
         }
       }
 
-      self.lost = function() {
-        if (self.y > canvas.height) {
-          self.dx = 0;
-          self.dy = 0;
-        }
-      }
-
-
       self.draw();
     }
 
     function ballCollision(ball1, ball2) {
-      var n = {x: ball2.x - ball1.x, y: ball2.y - ball1.y};
+      if (! (ball1.live && ball2.live) ) {
+        return false;
+      }
+      /*var n = {x: ball2.x - ball1.x, y: ball2.y - ball1.y};
       var nMag = Math.sqrt(n.x*n.x, n.y*n.y);
       var un = {x: n.x / nMag, y: n.y / nMag};
       var ut = {x: -un.y, y: un.x};
@@ -250,12 +269,12 @@
 
       var v1f = {x: v1nf*un.x + v1t*ut.x, y: v1nf*un.y + v1t*ut.y};
       var v2f = {x: v2nf*un.x + v2t*ut.x, y: v2nf*un.y + v2t*ut.y};
+      */
+      ball1.dx = Math.min(ball1.dx - ball2.dx, 2);
+      ball1.dy = Math.min(ball1.dy - ball2.dy, 2);
 
-      ball1.dx = Math.min(v1f.x, 20);
-      ball1.dy = Math.min(v1f.y, 20);
-
-      ball2.dx = Math.min(v2f.x, 20);
-      ball2.dy = Math.min(v2f.y, 20);
+      ball2.dx = Math.min(ball2.dx - ball1.dx, 2);
+      ball2.dy = Math.min(ball1.dy - ball1.dy, 2);
 
       //console.log(ball1.dx, ball1.dy, ball2.dx, ball2.dy);
     }
@@ -263,7 +282,7 @@
     function doCollide(ball1, ball2) {
       var dist = Math.sqrt(Math.pow(ball1.x - ball2.x, 2) + Math.pow(ball1.y - ball2.y, 2));
       var maxRadius = Math.max(ball1.radius, ball2.radius);
-      return (dist < maxRadius);
+      return (dist < maxRadius + 2);
     }
 
     var paddle = new Paddle();
@@ -331,8 +350,6 @@
           balls = [];
           bullets = [];
         }
-        balls[i].dx = Math.min(balls[i].dx, 20);
-        balls[i].dy = Math.min(balls[i].dy, 20);
         for (var j=0; j < balls.length; j++) {
           if (i != j) {
             if (doCollide(balls[i], balls[j])) {
@@ -346,7 +363,7 @@
         bullets[i].move();
         for (var j=0; j < balls.length; j++) {
           if (bullets[i].strike(balls[j])) {
-            balls[j].radius--;
+            balls[j].radius = balls[j].radius/1.5;
           }
         }
       }
